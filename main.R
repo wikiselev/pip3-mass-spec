@@ -2,7 +2,10 @@ source("functions.R")
 
 # first bunch of data
 process_data()
-plot_tech_reps()
+tech_reps()
+
+
+
 plot_gold_ratios("pip2")
 plot_gold_ratios("pip3")
 average_tech_reps("pip2")
