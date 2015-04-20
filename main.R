@@ -1,5 +1,13 @@
 source("functions.R")
 
+process_data1()
+tech_reps()
+
+
+
+
+
+
 # first bunch of data
 process_data()
 tech_reps()

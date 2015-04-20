@@ -106,27 +106,27 @@ process_data <- function(name) {
 	}
 }
 
-process_data1 <- function(name) {
+process_data1 <- function() {
         files <- list.files("all-data/raw/")
         files <- files[grepl("*.csv", files)]
-        files1 <- files[grepl("B_c4_FULL", files)]
-        files2 <- files[grepl("A_c18_FULL", files)]
+        files1 <- files[grepl("_c4_", files)]
+        files2 <- files[grepl("_c18_", files)]
         
         for(f in files1) {
-                # print(f)
+                print(f)
                 # import the raw data table in a text format. Here it is delimited by "," --
                 # can be change if the text file format is different
-                data <- read.csv(paste0("all-data/data-raw/", f))
+                data <- read.csv(paste0("all-data/raw/", f))
                 # leave only columns that are of interest. Here "Sample.ID", "Component.Name"
                 # and "Area" columns are left
-                data <- data[ , c(3, 7, 11)]
+                data <- data[ , colnames(data) %in% c("Sample.ID", "Component.Name", "Area")]
                 data$ISD <- 0
                 data[grep("P3_", data$Component.Name), ]$ISD <- rep(data[data$Component.Name == "ISD_PIP3", ]$Area, 5)
                 data[grep("P2_", data$Component.Name), ]$ISD <- rep(data[data$Component.Name == "d7_SA_P2", ]$Area, 5)
                 data[grep("PI_", data$Component.Name), ]$ISD <- rep(data[data$Component.Name == "ISD_PI", ]$Area, 5)
                 data[grep("PIP_", data$Component.Name), ]$ISD <- rep(data[data$Component.Name == "ISD_PI", ]$Area, 5)
                 data <- data[data$ISD != 0, ]
-                data$ng <- data$Area/data$ISD
+                data$ng <- as.numeric(data$Area)/as.numeric(data$ISD)
                 
                 data$Golden.Ratio <- 0
                 data[grep("P3_", data$Component.Name), ]$Golden.Ratio <- data[grep("PI_", data$Component.Name), ]$ng
@@ -158,25 +158,27 @@ process_data1 <- function(name) {
                 res$Time <- as.numeric(res$Time)
                 res <- res[,c(1, 2, 5:11)]
                 res <- as.data.table(res)
+                # filter only _4 species
+                res <- res[grepl("_4", Component.Name)]
                 # save the new data table to a file
                 saveRDS(res, paste0("all-data/processed/", strsplit(f, "\\.")[[1]][1], ".rds"))
         }
 
         for(f in files2) {
-                # print(f)
+                print(f)
                 # import the raw data table in a text format. Here it is delimited by "," --
                 # can be change if the text file format is different
-                data <- read.csv(paste0("all-data/data-raw/", f))
+                data <- read.csv(paste0("all-data/raw/", f))
                 # leave only columns that are of interest. Here "Sample.ID", "Component.Name"
                 # and "Area" columns are left
-                data <- data[ , c(3, 7, 11)]
+                data <- data[ , colnames(data) %in% c("Sample.ID", "Component.Name", "Area")]
                 data$ISD <- 0
                 data[data$Component.Name == "SA_P2_aldehyde_45", ]$ISD <- rep(data[data$Component.Name == "d6_SA_P2_aldehyde_45", ]$Area, 1)
                 data[data$Component.Name == "SA_P2_aldehyde_34", ]$ISD <- rep(data[data$Component.Name == "d6_SA_P2_aldehyde_34", ]$Area, 1)
                 data[data$Component.Name == "SA_PI_aldehyde", ]$ISD <- rep(data[data$Component.Name == "17:0-20:4_PI_aldehyde", ]$Area, 1)
                 data[data$Component.Name == "SA_PIP_aldehyde", ]$ISD <- rep(data[data$Component.Name == "17:0-20:4_PI_aldehyde", ]$Area, 1)
                 data <- data[data$ISD != 0, ]
-                data$ng <- data$Area/data$ISD
+                data$ng <- as.numeric(data$Area)/as.numeric(data$ISD)
                 
                 data$Golden.Ratio <- 0
                 data[data$Component.Name == "SA_P2_aldehyde_45", ]$Golden.Ratio <- data[data$Component.Name == "SA_PI_aldehyde", ]$ng
@@ -216,21 +218,21 @@ process_data1 <- function(name) {
 
 tech_reps <- function() {
 	files <- list.files("all-data/processed/")
-
+        system("rm -r plot-tech-rep/*")
 	for(f in files) {
-		d <- readRDS(paste0("all-data/processed/", f))
-		p <- ggplot(d, aes(x = as.factor(Time), y = ng, fill = Genotype)) +
-			geom_boxplot() +
-			facet_grid(Component.Name ~ Condition, scale="free") +
-			theme_bw()
-		ggsave(p, file = paste0("plot-tech-rep/ng-", strsplit(f, "\\.")[[1]][1], ".pdf"), w = 10, h = 1.75*length(unique(d$Component.Name)))
-		p <- ggplot(d, aes(x = as.factor(Time), y = Golden.Ratio, fill = Genotype)) +
-		        geom_boxplot() +
-		        facet_grid(Component.Name ~ Condition, scale="free") +
-		        theme_bw()
-		ggsave(p, file = paste0("plot-tech-rep/golden-ratio-", strsplit(f, "\\.")[[1]][1], ".pdf"), w = 10, h = 1.75*length(unique(d$Component.Name)))
-		d <- d[,list(Golden.Ratio.Av.Tech = mean(Golden.Ratio)), by = c("Component.Name", "Genotype", "Condition", "Antagonist", "Time")]
-		saveRDS(d, paste0("all-data/tech-rep-av/", f))
+                system(paste0("mkdir plot-tech-rep/", strsplit(f, "\\.")[[1]][1]))
+	        d <- readRDS(paste0("all-data/processed/", f))
+                t <- d[,list(Mean.GR = mean(Golden.Ratio), sd.GR = sd(Golden.Ratio)), by = c("Component.Name", "Genotype", "Condition", "Antagonist", "Time")]
+	        saveRDS(t, paste0("all-data/tech-rep-av/", f))
+                for(comp in unique(t$Component.Name)) {
+        		p <- ggplot(t[Component.Name == comp], aes(x = Time, y = Mean.GR, color = Antagonist, group = Antagonist)) +
+        			geom_point() +
+                                geom_line() +
+        			facet_grid(Genotype ~ Condition) +
+        		        geom_errorbar(aes(ymax = Mean.GR + sd.GR, ymin = Mean.GR - sd.GR), size = 0.5, width = 0.2) +
+        			theme_bw()
+        		ggsave(p, file = paste0("plot-tech-rep/", strsplit(f, "\\.")[[1]][1], "/", comp, ".pdf"), w = 6, h = 4)
+                }
 	}
 }
 
