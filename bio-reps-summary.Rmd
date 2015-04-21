@@ -1,0 +1,83 @@
+---
+title: "Summary of biological replicates"
+author: "Vladimir Kiselev"
+date: "20 April 2015"
+output: pdf_document
+---
+
+In this report I combine all available data in one file. The purpose is to overview the data and to understand what replicates to use in the modeling project.
+
+I add plots of each species splitted by file names.
+
+# P3_4
+
+2014_09_05B_c4_FULLn1
+
+![](plot-tech-rep/2014_09_05B_c4_FULLn1/P3_4.pdf)
+
+2014_09_19B_c4_FULLn2
+
+![](plot-tech-rep/2014_09_19B_c4_FULLn2/P3_4.pdf)
+
+2015_02_23B_c4_FULLn3
+
+![](plot-tech-rep/2015_02_23B_c4_FULLn3/P3_4.pdf)
+
+2014_12_18A_c4_full
+
+![](plot-tech-rep/2014_12_18A_c4_full/P3_4.pdf)
+
+2015_02_06B_c4_pten_ship2_ptenship2_n2
+
+![](plot-tech-rep/2015_02_06B_c4_pten_ship2_ptenship2_n2/P3_4.pdf)
+
+2015_04_04A_c4_wt_ship2_pten_ptenship2_N3
+
+![](plot-tech-rep/2015_04_04A_c4_wt_ship2_pten_ptenship2_N3/P3_4.pdf)
+
+2014_12_12A_c4_wt_ab_pten_tc
+
+![](plot-tech-rep/2014_12_12A_c4_wt_ab_pten_tc/P3_4.pdf)
+
+2015_02_14B_c4_pten_ab_pab_tcN2_pabVSpabsN2
+
+![](plot-tech-rep/2015_02_14B_c4_pten_ab_pab_tcN2_pabVSpabsN2/P3_4.pdf)
+
+2014_10_10A_c4_pabVSpabs
+
+![](plot-tech-rep/2014_10_10A_c4_pabVSpabs/P3_4.pdf)
+
+2015_02_14B_c4_pabVSpabsN2
+
+![](plot-tech-rep/2015_02_14B_c4_pabVSpabsN2/P3_4.pdf)
+
+
+# SA_P2_aldehyde_34
+
+2014_09_05A_c18_FULLn1
+
+![](plot-tech-rep/2014_09_05A_c18_FULLn1/SA_P2_aldehyde_34.pdf)
+
+2014_09_19A_c18_FULLn2
+
+![](plot-tech-rep/2014_09_19A_c18_FULLn2/SA_P2_aldehyde_34.pdf)
+
+2015_02_23A_c18_FULLn3
+
+![](plot-tech-rep/2015_02_23A_c18_FULLn3/SA_P2_aldehyde_34.pdf)
+
+2014_12_12B_c18_wt_ab_pten_tc
+
+![](plot-tech-rep/2014_12_12B_c18_wt_ab_pten_tc/SA_P2_aldehyde_34.pdf)
+
+2015_02_14A_c18_pten_ab_pab_tcN2_pabVSpabsN2
+
+![](plot-tech-rep/2015_02_14A_c18_pten_ab_pab_tcN2_pabVSpabsN2/SA_P2_aldehyde_34.pdf)
+
+2014_10_10B_c18_pabVSpabs
+
+![](plot-tech-rep/2014_10_10B_c18_pabVSpabs/SA_P2_aldehyde_34.pdf)
+
+2015_02_14A_c18_pabVSpabsN2
+
+![](plot-tech-rep/2015_02_14A_c18_pabVSpabsN2/SA_P2_aldehyde_34.pdf)
