@@ -1,112 +1,4 @@
-process_data <- function(name) {
-	files <- list.files("../pip3/data-raw/")
-	files <- files[grepl("*.csv", files)]
-
-	for(f in files) {
-		# print(f)
-		# import the raw data table in a text format. Here it is delimited by "," --
-		# can be change if the text file format is different
-		data <- read.csv(paste0("../pip3/data-raw/", f))
-		# leave only columns that are of interest. Here "Sample.ID", "Component.Name"
-		# and "Area" columns are left
-		data <- data[ , c(3, 7, 11)]
-		data$ISD <- 0
-		data[grep("P3_", data$Component.Name), ]$ISD <- rep(data[data$Component.Name == "ISD_PIP3", ]$Area, 5)
-		data[grep("P2_", data$Component.Name), ]$ISD <- rep(data[data$Component.Name == "d7_SA_P2", ]$Area, 5)
-		data[grep("PI_", data$Component.Name), ]$ISD <- rep(data[data$Component.Name == "ISD_PI", ]$Area, 5)
-		data[grep("PIP_", data$Component.Name), ]$ISD <- rep(data[data$Component.Name == "ISD_PI", ]$Area, 5)
-		data <- data[data$ISD != 0, ]
-		data$ng <- data$Area/data$ISD
-
-		data$Golden.Ratio <- 0
-		data[grep("P3_", data$Component.Name), ]$Golden.Ratio <- data[grep("PI_", data$Component.Name), ]$ng
-		data[grep("P2_", data$Component.Name), ]$Golden.Ratio <- data[grep("PI_", data$Component.Name), ]$ng
-		data[grep("PI_", data$Component.Name), ]$Golden.Ratio <- data[grep("PI_", data$Component.Name), ]$ng
-		data[grep("PIP_", data$Component.Name), ]$Golden.Ratio <- data[grep("PI_", data$Component.Name), ]$ng
-		data$Golden.Ratio <- data$ng/data$Golden.Ratio
-		# import the sample information table in a text format. Please modify the sample
-		# iformation file in advance so that it looks like (this is an example):
-
-		# 1,100000,WT sictrl 1 a
-		# 2,100000,WT sictrl 0 b
-		# 3,100000,WT siINPP4A+B 1 a
-		# 4,100000,WT siINPP4A+B 0 b
-		# 5,100000,PTEN sictrl 1 a
-		# 6,100000,PTEN sictrl 0 b
-		# 7,100000,PTEN siship2 1 a
-		# 8,100000,PTEN siship2 1 b
-
-		# most importantly - the last column should have strings separated by " " --
-		# this separation will create table columns with these strings.
-		samples <- read.table(paste0("../pip3/sample-lists/", f), sep = ",")
-		samples.split <- t(as.data.frame(strsplit(samples[,3], " ")))[ , c(1, 2, 3, 4, 6)]
-		samples <- as.data.frame(cbind(samples[, 1], samples.split))
-		rownames(samples) <- NULL
-		colnames(samples) <- c("Sample.ID", "Genotype", "Condition", "Antagonist", "Time", "Tech.Rep")
-		# merge data and samples by Sample ID
-		res <- merge(data, samples, by = "Sample.ID")
-		res$Time <- as.numeric(res$Time)
-		res <- res[,c(1, 2, 5:11)]
-		res <- as.data.table(res)
-		# save the new data table to a file
-		saveRDS(res, paste0("../pip3/data-processed/", strsplit(f, "\\.")[[1]][1], ".rds"))
-	}
-
-	files <- list.files("../pip2/data-raw/")
-	files <- files[grepl("*.csv", files)]
-
-	for(f in files) {
-		# print(f)
-		# import the raw data table in a text format. Here it is delimited by "," --
-		# can be change if the text file format is different
-		data <- read.csv(paste0("../pip2/data-raw/", f))
-		# leave only columns that are of interest. Here "Sample.ID", "Component.Name"
-		# and "Area" columns are left
-		data <- data[ , c(3, 7, 11)]
-		data$ISD <- 0
-		data[data$Component.Name == "SA_P2_aldehyde_45", ]$ISD <- rep(data[data$Component.Name == "d6_SA_P2_aldehyde_45", ]$Area, 1)
-		data[data$Component.Name == "SA_P2_aldehyde_34", ]$ISD <- rep(data[data$Component.Name == "d6_SA_P2_aldehyde_34", ]$Area, 1)
-		data[data$Component.Name == "SA_PI_aldehyde", ]$ISD <- rep(data[data$Component.Name == "17:0-20:4_PI_aldehyde", ]$Area, 1)
-		data[data$Component.Name == "SA_PIP_aldehyde", ]$ISD <- rep(data[data$Component.Name == "17:0-20:4_PI_aldehyde", ]$Area, 1)
-		data <- data[data$ISD != 0, ]
-		data$ng <- data$Area/data$ISD
-
-		data$Golden.Ratio <- 0
-		data[data$Component.Name == "SA_P2_aldehyde_45", ]$Golden.Ratio <- data[data$Component.Name == "SA_PI_aldehyde", ]$ng
-		data[data$Component.Name == "SA_P2_aldehyde_34", ]$Golden.Ratio <- data[data$Component.Name == "SA_PI_aldehyde", ]$ng
-		data[data$Component.Name == "SA_PI_aldehyde", ]$Golden.Ratio <- data[data$Component.Name == "SA_PI_aldehyde", ]$ng
-		data[data$Component.Name == "SA_PIP_aldehyde", ]$Golden.Ratio <- data[data$Component.Name == "SA_PI_aldehyde", ]$ng
-		data$Golden.Ratio <- data$ng/data$Golden.Ratio
-		# import the sample information table in a text format. Please modify the sample
-		# iformation file in advance so that it looks like (this is an example):
-
-		# 1,100000,WT sictrl 1 a
-		# 2,100000,WT sictrl 0 b
-		# 3,100000,WT siINPP4A+B 1 a
-		# 4,100000,WT siINPP4A+B 0 b
-		# 5,100000,PTEN sictrl 1 a
-		# 6,100000,PTEN sictrl 0 b
-		# 7,100000,PTEN siship2 1 a
-		# 8,100000,PTEN siship2 1 b
-
-		# most importantly - the last column should have strings separated by " " --
-		# this separation will create table columns with these strings.
-		samples <- read.table(paste0("../pip2/sample-lists/", f), sep = ",")
-		samples.split <- t(as.data.frame(strsplit(samples[,3], " ")))[ , c(1, 2, 3, 4, 6)]
-		samples <- as.data.frame(cbind(samples[, 1], samples.split))
-		rownames(samples) <- NULL
-		colnames(samples) <- c("Sample.ID", "Genotype", "Condition", "Antagonist", "Time", "Tech.Rep")
-		# merge data and samples by Sample ID
-		res <- merge(data, samples, by = "Sample.ID")
-		res$Time <- as.numeric(res$Time)
-		res <- res[,c(1, 2, 5:10)]
-		res <- as.data.table(res)
-		# save the new data table to a file
-		saveRDS(res, paste0("../pip2/data-processed/", strsplit(f, "\\.")[[1]][1], ".rds"))
-	}
-}
-
-process_data1 <- function() {
+process_data <- function() {
         files <- list.files("all-data/raw/")
         files <- files[grepl("*.csv", files)]
         files1 <- files[grepl("_c4_", files)]
@@ -120,20 +12,37 @@ process_data1 <- function() {
                 # leave only columns that are of interest. Here "Sample.ID", "Component.Name"
                 # and "Area" columns are left
                 data <- data[ , colnames(data) %in% c("Sample.ID", "Component.Name", "Area")]
-                data$ISD <- 0
-                data[grep("P3_", data$Component.Name), ]$ISD <- rep(data[data$Component.Name == "ISD_PIP3", ]$Area, 5)
-                data[grep("P2_", data$Component.Name), ]$ISD <- rep(data[data$Component.Name == "d7_SA_P2", ]$Area, 5)
-                data[grep("PI_", data$Component.Name), ]$ISD <- rep(data[data$Component.Name == "ISD_PI", ]$Area, 5)
-                data[grep("PIP_", data$Component.Name), ]$ISD <- rep(data[data$Component.Name == "ISD_PI", ]$Area, 5)
-                data <- data[data$ISD != 0, ]
-                data$ng <- as.numeric(data$Area)/as.numeric(data$ISD)
+                # there is one experiment with some weird values
+                # here I get rid of them - checked with Anna
+                data <- data[data$Sample.ID != "blank", ]
+                if (dim(data[data$Area == "N/A", ])[1] != 0) {
+                  data[data$Area == "N/A", ]$Area <- 0
+                }
                 
-                data$Golden.Ratio <- 0
-                data[grep("P3_", data$Component.Name), ]$Golden.Ratio <- data[grep("PI_", data$Component.Name), ]$ng
-                data[grep("P2_", data$Component.Name), ]$Golden.Ratio <- data[grep("PI_", data$Component.Name), ]$ng
-                data[grep("PI_", data$Component.Name), ]$Golden.Ratio <- data[grep("PI_", data$Component.Name), ]$ng
-                data[grep("PIP_", data$Component.Name), ]$Golden.Ratio <- data[grep("PI_", data$Component.Name), ]$ng
-                data$Golden.Ratio <- data$ng/data$Golden.Ratio
+                data1 <- data.frame()
+
+                data1 <- rbind(data1,
+                               merge(data[grep("P3_", data$Component.Name), ],
+                                     data[data$Component.Name == "ISD_PIP3", ],
+                                     by = "Sample.ID"))
+                data1 <- rbind(data1,
+                               merge(data[grep("P2_", data$Component.Name), ],
+                                     data[data$Component.Name == "d7_SA_P2", ],
+                                     by = "Sample.ID"))
+                data1 <- rbind(data1,
+                               merge(data[grep("PI_", data$Component.Name), ],
+                                     data[data$Component.Name == "ISD_PI", ],
+                                     by = "Sample.ID"))
+                data1 <- rbind(data1,
+                               merge(data[grep("PIP_", data$Component.Name), ],
+                                     data[data$Component.Name == "ISD_PI", ],
+                                     by = "Sample.ID"))
+                
+                data1$ng <- as.numeric(data1$Area.x)/as.numeric(data1$Area.y)
+                
+                data1$PI.ng <- rep(data1[grep("PI_", data1$Component.Name.x), ]$ng, 4)
+                data1$Golden.Ratio <- data1$ng/data1$PI.ng
+                
                 # import the sample information table in a text format. Please modify the sample
                 # iformation file in advance so that it looks like (this is an example):
                 
@@ -154,12 +63,12 @@ process_data1 <- function() {
                 rownames(samples) <- NULL
                 colnames(samples) <- c("Sample.ID", "Genotype", "Condition", "Antagonist", "Time", "Tech.Rep")
                 # merge data and samples by Sample ID
-                res <- merge(data, samples, by = "Sample.ID")
+                res <- merge(data1, samples, by = "Sample.ID")
                 res$Time <- as.numeric(res$Time)
-                res <- res[,c(1, 2, 5:11)]
+                # res <- res[,c(1, 2, 5:11)]
                 res <- as.data.table(res)
                 # filter only _4 species
-                res <- res[grepl("_4", Component.Name)]
+                res <- res[grepl("_4", Component.Name.x)]
                 # save the new data table to a file
                 saveRDS(res, paste0("all-data/processed/", strsplit(f, "\\.")[[1]][1], ".rds"))
         }
@@ -172,20 +81,37 @@ process_data1 <- function() {
                 # leave only columns that are of interest. Here "Sample.ID", "Component.Name"
                 # and "Area" columns are left
                 data <- data[ , colnames(data) %in% c("Sample.ID", "Component.Name", "Area")]
-                data$ISD <- 0
-                data[data$Component.Name == "SA_P2_aldehyde_45", ]$ISD <- rep(data[data$Component.Name == "d6_SA_P2_aldehyde_45", ]$Area, 1)
-                data[data$Component.Name == "SA_P2_aldehyde_34", ]$ISD <- rep(data[data$Component.Name == "d6_SA_P2_aldehyde_34", ]$Area, 1)
-                data[data$Component.Name == "SA_PI_aldehyde", ]$ISD <- rep(data[data$Component.Name == "17:0-20:4_PI_aldehyde", ]$Area, 1)
-                data[data$Component.Name == "SA_PIP_aldehyde", ]$ISD <- rep(data[data$Component.Name == "17:0-20:4_PI_aldehyde", ]$Area, 1)
-                data <- data[data$ISD != 0, ]
-                data$ng <- as.numeric(data$Area)/as.numeric(data$ISD)
+                # there is one experiment with some weird values
+                # here I get rid of them - checked with Anna
+                data <- data[data$Sample.ID != "blank", ]
+                if (dim(data[data$Area == "N/A", ])[1] != 0) {
+                  data[data$Area == "N/A", ]$Area <- 0
+                }
                 
-                data$Golden.Ratio <- 0
-                data[data$Component.Name == "SA_P2_aldehyde_45", ]$Golden.Ratio <- data[data$Component.Name == "SA_PI_aldehyde", ]$ng
-                data[data$Component.Name == "SA_P2_aldehyde_34", ]$Golden.Ratio <- data[data$Component.Name == "SA_PI_aldehyde", ]$ng
-                data[data$Component.Name == "SA_PI_aldehyde", ]$Golden.Ratio <- data[data$Component.Name == "SA_PI_aldehyde", ]$ng
-                data[data$Component.Name == "SA_PIP_aldehyde", ]$Golden.Ratio <- data[data$Component.Name == "SA_PI_aldehyde", ]$ng
-                data$Golden.Ratio <- data$ng/data$Golden.Ratio
+                data1 <- data.frame()
+                
+                data1 <- rbind(data1,
+                               merge(data[data$Component.Name == "SA_P2_aldehyde_45", ],
+                                     data[data$Component.Name == "d6_SA_P2_aldehyde_45", ],
+                                     by = "Sample.ID"))
+                data1 <- rbind(data1,
+                               merge(data[data$Component.Name == "SA_P2_aldehyde_34", ],
+                                     data[data$Component.Name == "d6_SA_P2_aldehyde_34", ],
+                                     by = "Sample.ID"))
+                data1 <- rbind(data1,
+                               merge(data[data$Component.Name == "SA_PI_aldehyde", ],
+                                     data[data$Component.Name == "17:0-20:4_PI_aldehyde", ],
+                                     by = "Sample.ID"))
+                data1 <- rbind(data1,
+                               merge(data[data$Component.Name == "SA_PIP_aldehyde", ],
+                                     data[data$Component.Name == "17:0-20:4_PI_aldehyde", ],
+                                     by = "Sample.ID"))
+                
+                data1$ng <- as.numeric(data1$Area.x)/as.numeric(data1$Area.y)
+                
+                data1$PI.ng <- rep(data1[grep("PI_", data1$Component.Name.x), ]$ng, 4)
+                data1$Golden.Ratio <- data1$ng/data1$PI.ng
+                
                 # import the sample information table in a text format. Please modify the sample
                 # iformation file in advance so that it looks like (this is an example):
                 
@@ -206,9 +132,9 @@ process_data1 <- function() {
                 rownames(samples) <- NULL
                 colnames(samples) <- c("Sample.ID", "Genotype", "Condition", "Antagonist", "Time", "Tech.Rep")
                 # merge data and samples by Sample ID
-                res <- merge(data, samples, by = "Sample.ID")
+                res <- merge(data1, samples, by = "Sample.ID")
                 res$Time <- as.numeric(res$Time)
-                res <- res[,c(1, 2, 5:10)]
+                # res <- res[,c(1, 2, 5:10)]
                 res <- as.data.table(res)
                 # save the new data table to a file
                 saveRDS(res, paste0("all-data/processed/", strsplit(f, "\\.")[[1]][1], ".rds"))
@@ -218,21 +144,21 @@ process_data1 <- function() {
 
 tech_reps <- function() {
 	files <- list.files("all-data/processed/")
-        system("rm -r plot-tech-rep/*")
+  system("rm -r plot-tech-rep/*")
 	for(f in files) {
-                system(paste0("mkdir plot-tech-rep/", strsplit(f, "\\.")[[1]][1]))
-	        d <- readRDS(paste0("all-data/processed/", f))
-                t <- d[,list(Mean.GR = mean(Golden.Ratio), sd.GR = sd(Golden.Ratio)), by = c("Component.Name", "Genotype", "Condition", "Antagonist", "Time")]
-	        saveRDS(t, paste0("all-data/tech-rep-av/", f))
-                for(comp in unique(t$Component.Name)) {
-        		p <- ggplot(t[Component.Name == comp], aes(x = Time, y = Mean.GR, color = Antagonist, group = Antagonist)) +
-        			geom_point() +
-                                geom_line() +
-        			facet_grid(Genotype ~ Condition) +
-        		        geom_errorbar(aes(ymax = Mean.GR + sd.GR, ymin = Mean.GR - sd.GR), size = 0.5, width = 0.2) +
-        			theme_bw()
-        		ggsave(p, file = paste0("plot-tech-rep/", strsplit(f, "\\.")[[1]][1], "/", comp, ".pdf"), w = 6, h = 4)
-                }
+    system(paste0("mkdir plot-tech-rep/", strsplit(f, "\\.")[[1]][1]))
+    d <- readRDS(paste0("all-data/processed/", f))
+    t <- d[,list(Mean.GR = mean(Golden.Ratio), sd.GR = sd(Golden.Ratio)), by = c("Component.Name.x", "Genotype", "Condition", "Antagonist", "Time")]
+    saveRDS(t, paste0("all-data/tech-rep-av/", f))
+    for(comp in unique(t$Component.Name)) {
+  		p <- ggplot(t[Component.Name.x == comp], aes(x = Time, y = Mean.GR, color = Antagonist, group = Antagonist)) +
+  			geom_point() +
+        geom_line() +
+  			facet_grid(Genotype ~ Condition) +
+  		  geom_errorbar(aes(ymax = Mean.GR + sd.GR, ymin = Mean.GR - sd.GR), size = 0.5, width = 0.2) +
+  			theme_bw()
+  		ggsave(p, file = paste0("plot-tech-rep/", strsplit(f, "\\.")[[1]][1], "/", comp, ".pdf"), w = 6, h = 4)
+    }
 	}
 }
 
