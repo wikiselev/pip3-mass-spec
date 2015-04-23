@@ -162,6 +162,16 @@ tech_reps <- function() {
 	}
 }
 
+get_bio_rep <- function(file.name, component) {
+  rep <- readRDS(paste0("all-data/tech-rep-av/", file.name, ".rds"))
+  if (component %in% unique(rep[,Component.Name.x])) {
+    rep <- rep[Component.Name.x == component, list(Component.Name.x, Genotype, Condition, Antagonist, Time, Mean.GR)]
+    rep[Antagonist == "dmso", Antagonist:="-"]
+  } else {
+    print(paste0("There is no ", component, " component in ", file.name, " file!!!"))
+  }
+}
+
 bio_reps <- function() {
         files <- list.files("all-data/tech-rep-av/")
         files1 <- files[grepl("B_c4_FULL", files)]
