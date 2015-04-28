@@ -3,9 +3,9 @@ source("functions.R")
 process_data()
 tech_reps()
 
+# add comments about different reports
 
-
-
+clean_for_copasi()
 
 
 

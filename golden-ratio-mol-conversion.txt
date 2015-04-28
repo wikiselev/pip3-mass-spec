@@ -1,0 +1,4 @@
+1 point in the Golden Ratio PIP3  is equal to  0.036718508 nmol 
+1 point in the Golden Ratio PIP2 ( C4 column )  is equal to 0.016267146 nmol 
+1 point in the Golden Ratio PI(4,5)P2 ( C18 column )  is equal to  0.1328752 nmol
+1 point in the Golden Ratio PI(3,4)p2 ( C18 column )  is equal to  0.033106953 nmol

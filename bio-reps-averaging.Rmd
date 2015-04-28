@@ -228,7 +228,7 @@ And averaging of all biological replicates provides a final plot containing all 
 d2 <- all.rep[ , list(Bio.Mean.GR.norm = mean(Mean.GR.norm), Bio.SD.GR.norm = sd(Mean.GR.norm)),
         by = c("Component.Name.x", "Genotype", "Condition", "Antagonist", "Time")]
 
-write.csv2(d2, file = "all-data/bio-rep-av/p3_4.csv", row.names = F, quote = F)
+write.csv(d2, file = "all-data/bio-rep-av/p3_4.csv", row.names = F, quote = F)
 
 p <- ggplot(d2, aes(x = Time, y = Bio.Mean.GR.norm, color = Antagonist, group = Antagonist)) +
   geom_point() +
@@ -443,7 +443,7 @@ And averaging of all biological replicates provides a final plot containing all 
 d2 <- all.rep[ , list(Bio.Mean.GR.norm = mean(Mean.GR.norm), Bio.SD.GR.norm = sd(Mean.GR.norm)),
         by = c("Component.Name.x", "Genotype", "Condition", "Antagonist", "Time")]
 
-write.csv2(d2, file = "all-data/bio-rep-av/pi34p2.csv", row.names = F, quote = F)
+write.csv(d2, file = "all-data/bio-rep-av/pi34p2.csv", row.names = F, quote = F)
 
 p <- ggplot(d2, aes(x = Time, y = Bio.Mean.GR.norm, color = Antagonist, group = Antagonist)) +
   geom_point() +

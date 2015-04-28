@@ -1,0 +1,215 @@
+---
+title: "Data preparation for modeling"
+author: "Vladimir Kiselev"
+date: "28 April 2015"
+output:
+  pdf_document:
+    number_sections: yes
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(cache=TRUE)
+knitr::opts_chunk$set(echo=FALSE)
+```
+
+```{r, include=FALSE}
+source("functions.R")
+```
+
+In this report I will show how I convert Golden Ratio units into uM (umol/l) and how I do regression analysis to get smooth curves for the modeling part.
+
+# Golden Ratio --> uM units
+
+First of all, the final data for both PIP3 and PI(3,4)P2:
+
+```{r, include=FALSE}
+p3 <- read.csv("all-data/bio-rep-av/p3_4.csv")
+p3$Bio.SD.GR.norm[is.na(p3$Bio.SD.GR.norm)] <- 0
+p2 <- read.csv("all-data/bio-rep-av/pi34p2.csv")
+p2$Bio.SD.GR.norm[is.na(p2$Bio.SD.GR.norm)] <- 0
+```
+
+PIP3
+
+```{r, fig.width=8, fig.height=4}
+p <- ggplot(p3, aes(x = Time, y = Bio.Mean.GR.norm, color = Antagonist, group = Antagonist)) +
+  geom_point() +
+  geom_line() +
+  facet_grid(Genotype ~ Condition) +
+  geom_errorbar(aes(ymax = Bio.Mean.GR.norm + Bio.SD.GR.norm, ymin = Bio.Mean.GR.norm - Bio.SD.GR.norm), size = 0.5, width = 0.2) +
+  theme_bw()
+p
+```
+
+PI(3,4)P2
+
+```{r, fig.width=8, fig.height=4}
+p <- ggplot(p2, aes(x = Time, y = Bio.Mean.GR.norm, color = Antagonist, group = Antagonist)) +
+  geom_point() +
+  geom_line() +
+  facet_grid(Genotype ~ Condition) +
+  geom_errorbar(aes(ymax = Bio.Mean.GR.norm + Bio.SD.GR.norm, ymin = Bio.Mean.GR.norm - Bio.SD.GR.norm), size = 0.5, width = 0.2) +
+  theme_bw()
+p
+```
+
+Let's now convert Golden Ratio units in M units. First, define all parameters:
+
+```{r, echo=TRUE}
+cell.radius <- 10e-6 # [m]; Malek: average diameter of MCF10a cells: 18.7 um
+cell.volume <- 4/3*3.14*cell.radius^3*1e3 # [l]
+nucleus.volume <- 0.1*cell.volume # [l]; 10% of cell volume - from Wikipedia
+cytoplasm.volume <- cell.volume - nucleus.volume # [l]
+ms.cell.number <- 250000 # number of cells involved in each mass spec experiment
+# for the following factors - see golden-ratio-mol-conversion.txt
+# 1 point in the Golden Ratio PIP3  is equal to  0.036718508 nmol 
+p3.conversion.factor <- 0.036718508
+# 1 point in the Golden Ratio PI(3,4)p2 ( C18 column )  is equal to  0.033106953 nmol
+p2.conversion.factor <- 0.033106953
+```
+
+Now make the conversion:
+
+```{r, echo=TRUE}
+# convert to nmols
+p2$nm <- p2$Bio.Mean.GR.norm*p2.conversion.factor
+p2$nm.sd <- p2$Bio.SD.GR.norm*p2.conversion.factor
+p3$nm <- p3$Bio.Mean.GR.norm*p3.conversion.factor
+p3$nm.sd <- p3$Bio.SD.GR.norm*p3.conversion.factor
+# convert to uM concentration
+p2$uM <- p2$nm/
+        ms.cell.number*   # per 1 cell
+        1e-9/             # nmol --> mol
+        cytoplasm.volume/ # divide by the cell volume and get 
+                          # concentration in M
+        1e-6              # M --> uM
+p2$uM.sd <- p2$nm.sd/
+        ms.cell.number*   # per 1 cell
+        1e-9/             # nmol --> mol
+        cytoplasm.volume/ # divide by the cell volume and get 
+                          # concentration in M
+        1e-6              # M --> uM
+p3$uM <- p3$nm/
+        ms.cell.number*   # per 1 cell
+        1e-9/             # nmol --> mol
+        cytoplasm.volume/ # divide by the cell volume and get 
+                          # concentration in M
+        1e-6              # M --> uM
+p3$uM.sd <- p3$nm.sd/
+        ms.cell.number*   # per 1 cell
+        1e-9/             # nmol --> mol
+        cytoplasm.volume/ # divide by the cell volume and get 
+                          # concentration in M
+        1e-6              # M --> uM
+write.csv(p2, file = "all-data/bio-rep-av/pi34p2-uM.csv", row.names = F, quote = F)
+write.csv(p3, file = "all-data/bio-rep-av/p3_4-uM.csv", row.names = F, quote = F)
+```
+
+Now plot data represented in uM:
+
+PIP3
+
+```{r, fig.width=8, fig.height=4}
+p <- ggplot(p3, aes(x = Time, y = uM, color = Antagonist, group = Antagonist)) +
+  geom_point() +
+  geom_line() +
+  facet_grid(Genotype ~ Condition) +
+  geom_errorbar(aes(ymax = uM + uM.sd, ymin = uM - uM.sd), size = 0.5, width = 0.2) +
+  theme_bw()
+p
+```
+
+PI(3,4)P2
+
+```{r, fig.width=8, fig.height=4}
+p <- ggplot(p2, aes(x = Time, y = uM, color = Antagonist, group = Antagonist)) +
+  geom_point() +
+  geom_line() +
+  facet_grid(Genotype ~ Condition) +
+  geom_errorbar(aes(ymax = uM + uM.sd, ymin = uM - uM.sd), size = 0.5, width = 0.2) +
+  theme_bw()
+p
+```
+
+# Regressions
+
+Now let's try to fit smooth curves to the data. I start with data with no PI3K inhibitor. I try to fit it with polynomial function of degree 2.
+
+PIP3
+
+```{r, fig.width=8, fig.height=4}
+regr <- function(df, antagonist) {
+  colnames(df) <- c("x", "y")
+  df <- df[order(df$x), ]
+  if(antagonist == "1uMPI-103"){
+    model = lm(y[2:7] ~ log(x[2:7]), data = df)
+#     print(summary(model))
+  	return(exp(predict(model)))
+  } else {
+    model = lm(y ~ poly(x, 2, raw = TRUE), data = df)
+#     print(summary(model))
+    new.df <- data.frame(x = c(0, 0.5, 1, 1.50, 2:15))
+  	return(predict(model, new.df))
+  }
+}
+
+p2 <- as.data.table(p2)
+p3 <- as.data.table(p3)
+
+p3.reg <- p3[Antagonist == "-" , list(uM = regr(data.frame(Time, uM), Antagonist),
+                     Time = if(Antagonist == "1uMPI-103") {
+                              sort(Time)[2:7]
+                            } else {
+                              c(0, 0.5, 1, 1.50, 2:15)
+                            }), by = c("Genotype", "Condition", "Antagonist")]
+p3.reg$type <- "regression"
+
+p3.filt <- p3[Antagonist == "-", list(Genotype, Condition, Antagonist, uM, Time)]
+p3.filt$type <- "real"
+
+dat <- rbind(p3.reg, p3.filt)
+
+
+p <- ggplot(dat, aes(x = Time, y = uM, color = type, group = type)) +
+  geom_point() +
+  geom_line() +
+  facet_grid(Genotype ~ Condition) +
+  theme_bw()
+p
+# df <- data.frame(p2[Genotype == "PTEN" & Condition == "siINPP4(A+B)" & Antagonist != "-", Time],
+#                  p2[Genotype == "PTEN" & Condition == "siINPP4(A+B)" & Antagonist != "-", uM])
+```
+
+It is not easy to fit polynomial function to PIP3 (I also tried degrees 3 and 4) and it looks like the time course is biphasic with the peak point as a changing point...
+
+PI(3,4)P2
+
+```{r, fig.width=8, fig.height=4}
+p2.reg <- p2[Antagonist == "-" , list(uM = regr(data.frame(Time, uM), Antagonist),
+                     Time = if(Antagonist == "1uMPI-103") {
+                              sort(Time)[2:7]
+                            } else {
+                              c(0, 0.5, 1, 1.50, 2:15)
+                            }), by = c("Genotype", "Condition", "Antagonist")]
+p2.reg$type <- "regression"
+
+p2.filt <- p2[Antagonist == "-", list(Genotype, Condition, Antagonist, uM, Time)]
+p2.filt$type <- "real"
+
+dat <- rbind(p2.reg, p2.filt)
+
+
+p <- ggplot(dat, aes(x = Time, y = uM, color = type, group = type)) +
+  geom_point() +
+  geom_line() +
+  facet_grid(Genotype ~ Condition) +
+  theme_bw()
+p
+```
+
+PI(3,4)P2 was easy to fit with the degree of 2.
+
+Data with the inhibitors is fit with an exponentional function but it requires more time to fit, because one has to take into account only few points of the time course - it is not possible to fit the total time course with just one exponent.
+
+In the model I will start with the raw data and see if I need to use regression at all.

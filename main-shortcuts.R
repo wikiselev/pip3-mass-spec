@@ -141,7 +141,7 @@ process_data <- function() {
         }
 }
 
-
+# analyse and plot tech replicates
 tech_reps <- function() {
 	files <- list.files("all-data/processed/")
   system("rm -r plot-tech-rep/*")
@@ -170,6 +170,19 @@ get_bio_rep <- function(file.name, component) {
   } else {
     print(paste0("There is no ", component, " component in ", file.name, " file!!!"))
   }
+}
+
+clean_for_copasi <- function() {
+  p3 <- read.csv("all-data/bio-rep-av/p3_4-uM.csv")
+  p2 <- read.csv("all-data/bio-rep-av/pi34p2-uM.csv")
+  
+  p3 <- as.data.table(p3)
+  p2 <- as.data.table(p2)
+  
+  write.csv(p3[ , list(Genotype, Condition, Antagonist, Time = Time*60, uM)],
+            file = "copasi/p3_4-uM.csv", row.names = F, quote = F)
+  write.csv(p2[ , list(Genotype, Condition, Antagonist, Time = Time*60, uM)],
+            file = "copasi/pi34p2-uM.csv", row.names = F, quote = F)
 }
 
 bio_reps <- function() {
