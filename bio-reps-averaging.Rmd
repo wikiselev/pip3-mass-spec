@@ -1,0 +1,455 @@
+---
+title: "Averaging of biological replicates"
+author: "Vladimir Kiselev"
+date: "28 April 2015"
+output:
+  pdf_document:
+    number_sections: yes
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(cache=TRUE)
+knitr::opts_chunk$set(echo=FALSE)
+```
+
+```{r, include=FALSE}
+source("functions.R")
+```
+
+# Averaging all bio replicates of PIP3
+
+## Separated siINPP4(A+B) and siSHIP2 conditions
+
+Looking at the file bio-reps-summary.pdf I decided to normalize all PIP3 data to the peak value in PTEN-sictrl, which is about 0.01 (in Golden Ration units). To do this I merge all data from the following files into one file and treat these different data as biological replicates:
+
+2014_09_05B_c4_FULLn1
+
+2014_09_19B_c4_FULLn2
+
+2015_02_23B_c4_FULLn3
+
+2014_12_18A_c4_full
+
+2015_02_06B_c4_pten_ship2_ptenship2_n2
+
+2015_04_04A_c4_wt_ship2_pten_ptenship2_N3
+
+2014_12_12A_c4_wt_ab_pten_tc
+
+2015_02_14B_c4_pten_ab_pab_tcN2_pabVSpabsN2
+
+2015_03_06A_c4_pi34p2Trans_n3
+
+```{r}
+rep1 <- get_bio_rep("2014_09_05B_c4_FULLn1", "P3_4")
+rep1$rep <- "2014_09_05B_c4_FULLn1"
+rep2 <- get_bio_rep("2014_09_19B_c4_FULLn2", "P3_4")
+rep2$rep <- "2014_09_19B_c4_FULLn2"
+rep3 <- get_bio_rep("2015_02_23B_c4_FULLn3", "P3_4")
+rep3$rep <- "2015_02_23B_c4_FULLn3"
+rep4 <- get_bio_rep("2014_12_18A_c4_full", "P3_4")
+rep4$rep <- "2014_12_18A_c4_full"
+rep5 <- get_bio_rep("2015_02_06B_c4_pten_ship2_ptenship2_n2", "P3_4")
+rep5$rep <- "2015_02_06B_c4_pten_ship2_ptenship2_n2"
+rep6 <- get_bio_rep("2015_04_04A_c4_wt_ship2_pten_ptenship2_N3", "P3_4")
+rep6$rep <- "2015_04_04A_c4_wt_ship2_pten_ptenship2_N3"
+rep7 <- get_bio_rep("2014_12_12A_c4_wt_ab_pten_tc", "P3_4")
+rep7$rep <- "2014_12_12A_c4_wt_ab_pten_tc"
+rep8 <- get_bio_rep("2015_02_14B_c4_pten_ab_pab_tcN2_pabVSpabsN2", "P3_4")
+rep8$rep <- "2015_02_14B_c4_pten_ab_pab_tcN2_pabVSpabsN2"
+rep9 <- get_bio_rep("2015_03_06A_c4_pi34p2Trans_n3", "P3_4")
+rep9$rep <- "2015_03_06A_c4_pi34p2Trans_n3"
+
+d <- rbind(rep1, rep2)
+d <- rbind(d, rep3)
+d <- rbind(d, rep4)
+d <- rbind(d, rep5)
+d <- rbind(d, rep6)
+d <- rbind(d, rep7)
+d <- rbind(d, rep8)
+d <- rbind(d, rep9)
+```
+
+Then I find a coefficient of normalisation for each replicate (so that it should be always 0.01 in PTEN-sictrl condition)
+
+```{r, results='asis'}
+coef <- d[Time == 1 & Condition == "sictrl" & Genotype == "PTEN", list(norm.coef = 0.01/Mean.GR), by = "rep"]
+knitr::kable(coef)
+```
+
+Then I normalise each biological replicate by its coefficient.
+
+```{r, include=FALSE}
+setkey(coef, "rep")
+setkey(d, "rep")
+d <- d[coef]
+d[ , Mean.GR.norm:=Mean.GR*norm.coef]
+```
+
+The resulting plot for PIP3 without PI3K inhibitor:
+
+```{r, fig.width=8, fig.height=4}
+p <- ggplot(d[Antagonist == "-"], aes(x = Time, y = Mean.GR.norm, color = rep, group = rep)) +
+  geom_point() +
+  geom_line() +
+  facet_grid(Genotype ~ Condition) +
+  theme_bw() +
+  theme(legend.text=element_text(size=5))
+p
+```
+
+The resulting plot for PIP3 with PI3K inhibitor:
+
+```{r, fig.width=8, fig.height=4}
+p <- ggplot(d[Antagonist != "-"], aes(x = Time, y = Mean.GR.norm, color = rep, group = rep)) +
+  geom_point() +
+  geom_line() +
+  facet_grid(Genotype ~ Condition) +
+  theme_bw() +
+  theme(legend.text=element_text(size=5))
+p
+```
+
+Now I remove the outlier experiment 2015_02_06B_c4_pten_ship2_ptenship2_n2 (it is an outlier for both cases with and without PI3K inhibitor). The resulting plots are the following:
+
+```{r, fig.width=8, fig.height=4}
+# remove the outlier
+d <- d[rep != "2015_02_06B_c4_pten_ship2_ptenship2_n2"]
+
+p <- ggplot(d[Antagonist == "-"], aes(x = Time, y = Mean.GR.norm, color = rep, group = rep)) +
+  geom_point() +
+  geom_line() +
+  facet_grid(Genotype ~ Condition) +
+  theme_bw() +
+  theme(legend.text=element_text(size=5))
+p
+```
+
+```{r, fig.width=8, fig.height=4}
+p <- ggplot(d[Antagonist != "-"], aes(x = Time, y = Mean.GR.norm, color = rep, group = rep)) +
+  geom_point() +
+  geom_line() +
+  facet_grid(Genotype ~ Condition) +
+  theme_bw() +
+  theme(legend.text=element_text(size=5))
+p
+```
+
+Now I will average all of the replicates shown in the previous figure and plot the averaged data with error bars corresponding to biological noise:
+
+```{r, fig.width=8, fig.height=4}
+# average bio reps
+d1 <- d[ , list(Bio.Mean.GR.norm = mean(Mean.GR.norm), Bio.SD.GR.norm = sd(Mean.GR.norm)),
+  by = c("Component.Name.x", "Genotype", "Condition", "Antagonist", "Time")]
+
+p <- ggplot(d1, aes(x = Time, y = Bio.Mean.GR.norm, color = Antagonist, group = Antagonist)) +
+  geom_point() +
+  geom_line() +
+  facet_grid(Genotype ~ Condition) +
+  geom_errorbar(aes(ymax = Bio.Mean.GR.norm + Bio.SD.GR.norm, ymin = Bio.Mean.GR.norm - Bio.SD.GR.norm), size = 0.5, width = 0.2) +
+  theme_bw()
+p
+```
+
+## siINPP4(A+B)&siSHIP2 condition
+
+Note that there are still two experiments left in which we looked at double silencing of INPP4(A+B) and SHIP2:
+
+2014_10_10A_c4_pabVSpabs
+
+2015_02_14B_c4_pabVSpabsN2
+
+```{r}
+# add last 2 experiments and normalise them by siINPP4(A+B) (there is no sictrl in them)
+rep10 <- get_bio_rep("2014_10_10A_c4_pabVSpabs", "P3_4")
+rep10$rep <- "2014_10_10A_c4_pabVSpabs"
+rep11 <- get_bio_rep("2015_02_14B_c4_pabVSpabsN2", "P3_4")
+rep11$rep <- "2015_02_14B_c4_pabVSpabsN2"
+
+t <- rbind(rep10, rep11)
+```
+
+I have not used them in the previous section because they do not have PTEN-sictrl condition and would not be able to normalise them. But now, looking the last figure, I can normalise them by PTEN-siINPP4(A+B) condition (all other bio replicates are quite consistent in this point). The PIP3 concentration at this point should be:
+
+```{r, echo=TRUE}
+d1[Genotype == "PTEN" & Condition == "siINPP4(A+B)" & Time == 1, Bio.Mean.GR.norm]
+```
+
+So, first I normalise these two experiments by this time point:
+
+```{r, results='asis'}
+coef <- t[Time == 1 & Condition == "siINPP4(A+B)" & Genotype == "PTEN", list(norm.coef = 0.00779030920000628/Mean.GR), by = "rep"]
+knitr::kable(coef)
+```
+
+```{r, include=FALSE}
+setkey(coef, "rep")
+setkey(t, "rep")
+t <- t[coef]
+t[ , Mean.GR.norm:=Mean.GR*norm.coef]
+```
+
+And then merge these two replicates with the ones defined before.
+
+```{r}
+# merge all bio reps
+all.rep <- rbind(d, t)
+```
+
+Now the total data set looks like:
+
+```{r, fig.width=8, fig.height=4}
+p <- ggplot(all.rep[Antagonist == "-"], aes(x = Time, y = Mean.GR.norm, color = rep, group = rep)) +
+  geom_point() +
+  geom_line() +
+  facet_grid(Genotype ~ Condition) +
+  theme_bw() + 
+  theme(legend.text=element_text(size=5))
+p
+```
+
+```{r, fig.width=8, fig.height=4}
+p <- ggplot(all.rep[Antagonist != "-"], aes(x = Time, y = Mean.GR.norm, color = rep, group = rep)) +
+  geom_point() +
+  geom_line() +
+  facet_grid(Genotype ~ Condition) +
+  theme_bw() +
+  theme(legend.text=element_text(size=5))
+p
+```
+
+## Final plot of PIP3 data
+
+And averaging of all biological replicates provides a final plot containing all PIP3 data (I will be working with it in the modeling part):
+
+```{r, fig.width=8, fig.height=4}
+# average bio reps
+d2 <- all.rep[ , list(Bio.Mean.GR.norm = mean(Mean.GR.norm), Bio.SD.GR.norm = sd(Mean.GR.norm)),
+        by = c("Component.Name.x", "Genotype", "Condition", "Antagonist", "Time")]
+
+write.csv2(d2, file = "all-data/bio-rep-av/p3_4.csv", row.names = F, quote = F)
+
+p <- ggplot(d2, aes(x = Time, y = Bio.Mean.GR.norm, color = Antagonist, group = Antagonist)) +
+  geom_point() +
+  geom_line() +
+  facet_grid(Genotype ~ Condition) +
+  geom_errorbar(aes(ymax = Bio.Mean.GR.norm + Bio.SD.GR.norm, ymin = Bio.Mean.GR.norm - Bio.SD.GR.norm), size = 0.5, width = 0.2) +
+  theme_bw()
+p
+```
+
+# Averaging all bio replicates of PI(3,4)P2
+
+The same procedure as in the previous chapter can be done for PI(3,4)P2 lipids.
+
+## Separated siINPP4(A+B) and siSHIP2 conditions
+
+Looking at the file bio-reps-summary.pdf I decided to normalize all PI(3,4)P2 data to the peak value in PTEN-sictrl. To do this I merge all data from the following files into one file and treat these different data as biological replicates:
+
+2014_09_05A_c18_FULLn1
+
+2014_09_19A_c18_FULLn2
+
+2015_02_23A_c18_FULLn3
+
+2014_12_12B_c18_wt_ab_pten_tc
+
+2015_02_14A_c18_pten_ab_pab_tcN2_pabVSpabsN2
+
+2015_03_06B_c18_pi34p2Trans_n3
+
+```{r}
+rep1 <- get_bio_rep("2014_09_05A_c18_FULLn1", "SA_P2_aldehyde_34")
+rep1$rep <- "2014_09_05A_c18_FULLn1"
+rep2 <- get_bio_rep("2014_09_19A_c18_FULLn2", "SA_P2_aldehyde_34")
+rep2$rep <- "2014_09_19A_c18_FULLn2"
+rep3 <- get_bio_rep("2015_02_23A_c18_FULLn3", "SA_P2_aldehyde_34")
+rep3$rep <- "2015_02_23A_c18_FULLn3"
+rep4 <- get_bio_rep("2014_12_12B_c18_wt_ab_pten_tc", "SA_P2_aldehyde_34")
+rep4$rep <- "2014_12_12B_c18_wt_ab_pten_tc"
+rep5 <- get_bio_rep("2015_02_14A_c18_pten_ab_pab_tcN2_pabVSpabsN2", "SA_P2_aldehyde_34")
+rep5$rep <- "2015_02_14A_c18_pten_ab_pab_tcN2_pabVSpabsN2"
+rep6 <- get_bio_rep("2015_03_06B_c18_pi34p2Trans_n3", "SA_P2_aldehyde_34")
+rep6$rep <- "2015_03_06B_c18_pi34p2Trans_n3"
+
+d <- rbind(rep1, rep2)
+d <- rbind(d, rep3)
+d <- rbind(d, rep4)
+d <- rbind(d, rep5)
+d <- rbind(d, rep6)
+```
+
+To find the averaged concentration in PTEN-sictrl condition I simply average the data in this point (there are no really bad outliers in PI(3,4)P2 data, so it is possible to do it):
+
+```{r, echo=TRUE}
+d[Time == 1 & Condition == "sictrl" & Genotype == "PTEN", list(mean(Mean.GR))]
+```
+
+Then I find a coefficient of normalisation for each replicate (so that it should be always 0.078066230364529 in PTEN-sictrl condition)
+
+```{r, results='asis'}
+coef <- d[Time == 1 & Condition == "sictrl" & Genotype == "PTEN", list(norm.coef = 0.078066230364529/Mean.GR), by = "rep"]
+knitr::kable(coef)
+```
+
+Then I normalise each biological replicate by its coefficient.
+
+```{r, include=FALSE}
+setkey(coef, "rep")
+setkey(d, "rep")
+d <- d[coef]
+d[ , Mean.GR.norm:=Mean.GR*norm.coef]
+```
+
+The resulting plot for PIP3 without PI3K inhibitor:
+
+```{r, fig.width=8, fig.height=4}
+p <- ggplot(d[Antagonist == "-"], aes(x = Time, y = Mean.GR.norm, color = rep, group = rep)) +
+  geom_point() +
+  geom_line() +
+  facet_grid(Genotype ~ Condition) +
+  theme_bw() +
+  theme(legend.text=element_text(size=5))
+p
+```
+
+The resulting plot for PIP3 with PI3K inhibitor:
+
+```{r, fig.width=8, fig.height=4}
+p <- ggplot(d[Antagonist != "-"], aes(x = Time, y = Mean.GR.norm, color = rep, group = rep)) +
+  geom_point() +
+  geom_line() +
+  facet_grid(Genotype ~ Condition) +
+  theme_bw() +
+  theme(legend.text=element_text(size=5))
+p
+```
+
+Now I remove the outlier experiment 2015_02_06B_c4_pten_ship2_ptenship2_n2 (it is an outlier for both cases with and without PI3K inhibitor). The resulting plots are the following:
+
+```{r, fig.width=8, fig.height=4}
+# remove the outlier
+d <- d[rep != "2015_02_14A_c18_pten_ab_pab_tcN2_pabVSpabsN2"]
+
+p <- ggplot(d[Antagonist == "-"], aes(x = Time, y = Mean.GR.norm, color = rep, group = rep)) +
+  geom_point() +
+  geom_line() +
+  facet_grid(Genotype ~ Condition) +
+  theme_bw() +
+  theme(legend.text=element_text(size=5))
+p
+```
+
+```{r, fig.width=8, fig.height=4}
+p <- ggplot(d[Antagonist != "-"], aes(x = Time, y = Mean.GR.norm, color = rep, group = rep)) +
+  geom_point() +
+  geom_line() +
+  facet_grid(Genotype ~ Condition) +
+  theme_bw() +
+  theme(legend.text=element_text(size=5))
+p
+```
+
+Now I will average all of the replicates shown in the previous figure and plot the averaged data with error bars corresponding to biological noise:
+
+```{r, fig.width=8, fig.height=4}
+# average bio reps
+d1 <- d[ , list(Bio.Mean.GR.norm = mean(Mean.GR.norm), Bio.SD.GR.norm = sd(Mean.GR.norm)),
+  by = c("Component.Name.x", "Genotype", "Condition", "Antagonist", "Time")]
+
+p <- ggplot(d1, aes(x = Time, y = Bio.Mean.GR.norm, color = Antagonist, group = Antagonist)) +
+  geom_point() +
+  geom_line() +
+  facet_grid(Genotype ~ Condition) +
+  geom_errorbar(aes(ymax = Bio.Mean.GR.norm + Bio.SD.GR.norm, ymin = Bio.Mean.GR.norm - Bio.SD.GR.norm), size = 0.5, width = 0.2) +
+  theme_bw()
+p
+```
+
+## siINPP4(A+B)&siSHIP2 condition
+
+Note that there are still two experiments left in which we looked at double silencing of INPP4(A+B) and SHIP2:
+
+2014_10_10B_c18_pabVSpabs
+
+2015_02_14A_c18_pabVSpabsN2
+
+```{r}
+# add last 2 experiments and normalise them by siINPP4(A+B) (there is no sictrl in them)
+rep7 <- get_bio_rep("2014_10_10B_c18_pabVSpabs", "SA_P2_aldehyde_34")
+rep7$rep <- "2014_10_10A_c4_pabVSpabs"
+rep8 <- get_bio_rep("2015_02_14A_c18_pabVSpabsN2", "SA_P2_aldehyde_34")
+rep8$rep <- "2015_02_14B_c4_pabVSpabsN2"
+
+t <- rbind(rep7, rep8)
+```
+
+I have not used them in the previous section because they do not have PTEN-sictrl condition and would not be able to normalise them. But now, looking the last figure, I can normalise them by PTEN-siINPP4(A+B) condition (all other bio replicates are quite consistent in this point). The PIP3 concentration at this point should be:
+
+```{r, echo=TRUE}
+d1[Genotype == "PTEN" & Condition == "siINPP4(A+B)" & Time == 1, Bio.Mean.GR.norm]
+```
+
+So, first I normalise these two experiments by this time point:
+
+```{r, results='asis'}
+coef <- t[Time == 1 & Condition == "siINPP4(A+B)" & Genotype == "PTEN", list(norm.coef = 0.146013940573659/Mean.GR), by = "rep"]
+knitr::kable(coef)
+```
+
+```{r, include=FALSE}
+setkey(coef, "rep")
+setkey(t, "rep")
+t <- t[coef]
+t[ , Mean.GR.norm:=Mean.GR*norm.coef]
+```
+
+And then merge these two replicates with the ones defined before.
+
+```{r}
+# merge all bio reps
+all.rep <- rbind(d, t)
+```
+
+Now the total data set looks like:
+
+```{r, fig.width=8, fig.height=4}
+p <- ggplot(all.rep[Antagonist == "-"], aes(x = Time, y = Mean.GR.norm, color = rep, group = rep)) +
+  geom_point() +
+  geom_line() +
+  facet_grid(Genotype ~ Condition) +
+  theme_bw() + 
+  theme(legend.text=element_text(size=5))
+p
+```
+
+```{r, fig.width=8, fig.height=4}
+p <- ggplot(all.rep[Antagonist != "-"], aes(x = Time, y = Mean.GR.norm, color = rep, group = rep)) +
+  geom_point() +
+  geom_line() +
+  facet_grid(Genotype ~ Condition) +
+  theme_bw() +
+  theme(legend.text=element_text(size=5))
+p
+```
+
+## Final plot of PIP3 data
+
+And averaging of all biological replicates provides a final plot containing all PI(3,4)P2 data (I will be working with it in the modeling part):
+
+```{r, fig.width=8, fig.height=4}
+# average bio reps
+d2 <- all.rep[ , list(Bio.Mean.GR.norm = mean(Mean.GR.norm), Bio.SD.GR.norm = sd(Mean.GR.norm)),
+        by = c("Component.Name.x", "Genotype", "Condition", "Antagonist", "Time")]
+
+write.csv2(d2, file = "all-data/bio-rep-av/pi34p2.csv", row.names = F, quote = F)
+
+p <- ggplot(d2, aes(x = Time, y = Bio.Mean.GR.norm, color = Antagonist, group = Antagonist)) +
+  geom_point() +
+  geom_line() +
+  facet_grid(Genotype ~ Condition) +
+  geom_errorbar(aes(ymax = Bio.Mean.GR.norm + Bio.SD.GR.norm, ymin = Bio.Mean.GR.norm - Bio.SD.GR.norm), size = 0.5, width = 0.2) +
+  theme_bw()
+p
+```
