@@ -326,31 +326,6 @@ p <- ggplot(d[Antagonist != "-"], aes(x = Time, y = Mean.GR.norm, color = rep, g
 p
 ```
 
-Now I remove the outlier experiment 2015_02_06B_c4_pten_ship2_ptenship2_n2 (it is an outlier for both cases with and without PI3K inhibitor). The resulting plots are the following:
-
-```{r, fig.width=8, fig.height=4}
-# remove the outlier
-d <- d[rep != "2015_02_14A_c18_pten_ab_pab_tcN2_pabVSpabsN2"]
-
-p <- ggplot(d[Antagonist == "-"], aes(x = Time, y = Mean.GR.norm, color = rep, group = rep)) +
-  geom_point() +
-  geom_line() +
-  facet_grid(Genotype ~ Condition) +
-  theme_bw() +
-  theme(legend.text=element_text(size=5))
-p
-```
-
-```{r, fig.width=8, fig.height=4}
-p <- ggplot(d[Antagonist != "-"], aes(x = Time, y = Mean.GR.norm, color = rep, group = rep)) +
-  geom_point() +
-  geom_line() +
-  facet_grid(Genotype ~ Condition) +
-  theme_bw() +
-  theme(legend.text=element_text(size=5))
-p
-```
-
 Now I will average all of the replicates shown in the previous figure and plot the averaged data with error bars corresponding to biological noise:
 
 ```{r, fig.width=8, fig.height=4}

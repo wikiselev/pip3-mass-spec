@@ -179,10 +179,34 @@ clean_for_copasi <- function() {
   p3 <- as.data.table(p3)
   p2 <- as.data.table(p2)
   
-  write.csv(p3[ , list(Genotype, Condition, Antagonist, Time = Time*60, uM)],
-            file = "copasi/p3_4-uM.csv", row.names = F, quote = F)
-  write.csv(p2[ , list(Genotype, Condition, Antagonist, Time = Time*60, uM)],
-            file = "copasi/pi34p2-uM.csv", row.names = F, quote = F)
+  p3 <- p3[ , list(Genotype, Condition, Antagonist, Time = Time*60 + 300, uM)]
+  p2 <- p2[ , list(Genotype, Condition, Antagonist, Time = Time*60 + 300, uM)]
+  
+  setkeyv(p3, c("Genotype", "Condition", "Antagonist", "Time"))
+  setkeyv(p2, c("Genotype", "Condition", "Antagonist", "Time"))
+  
+  dat <- p2[p3]
+  
+  setnames(dat, colnames(dat), c("Genotype", "Condition", "Antagonist", "Time", "pi34p2", "pip3"))
+  
+  dat[Genotype == "PTEN", pten_percentage := 0]
+  dat[Genotype != "PTEN", pten_percentage := 1]
+  
+  dat[Condition == "siSHIP2", ship2_percentage := 0]
+  dat[Condition != "siSHIP2", ship2_percentage := 1]
+  
+  dat[Condition == "siINPP4(A+B)", pi34p2_degradation_via_inpp4ab := 0]
+  dat[Condition != "siINPP4(A+B)", pi34p2_degradation_via_inpp4ab := 1]
+  
+  dat[Condition == "siINPP4(A+B)&siSHIP2", ship2_percentage := 0]
+  dat[Condition == "siINPP4(A+B)&siSHIP2", pi34p2_degradation_via_inpp4ab := 0]
+  
+  dat[Antagonist == "1uMPI-103", pi3k_act := 0]
+  dat[Antagonist != "1uMPI-103", pi3k_act := 1]
+  
+  write.csv(dat[ , list(Time, pi34p2, pip3, pten_percentage, ship2_percentage,
+                        pi34p2_degradation_via_inpp4ab, pi3k_act)],
+            file = "copasi/experiment.csv", row.names = F, quote = F)
 }
 
 bio_reps <- function() {
