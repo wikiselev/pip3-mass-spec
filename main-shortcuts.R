@@ -12,6 +12,7 @@ process_data <- function() {
         # leave only columns that are of interest. Here 'Sample.ID', 'Component.Name' and 'Area' columns are left
         data <- data[, colnames(data) %in% c("Sample.ID", "Component.Name", "Area")]
         # there is one experiment with some weird values here I get rid of them - checked with Anna
+        # 2015_03_06A_c4_pi34p2Trans_n3
         data <- data[data$Sample.ID != "blank", ]
         if (dim(data[data$Area == "N/A", ])[1] != 0) {
             data[data$Area == "N/A", ]$Area <- 0

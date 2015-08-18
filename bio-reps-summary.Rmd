@@ -1,7 +1,7 @@
 ---
 title: "Summary of biological replicates"
 author: "Vladimir Kiselev"
-date: "20 April 2015"
+date: "18 August 2015"
 output: pdf_document
 ---
 
@@ -55,6 +55,9 @@ I add plots of each species splitted by file names.
 
 ![](plot-tech-rep/2015_02_14B_c4_pabVSpabsN2/P3_4.pdf)
 
+2015_08_06A_c4_PTEN_crispr_n1
+
+![](plot-tech-rep/2015_08_06A_c4_PTEN_crispr_n1/P3_4.pdf)
 
 # SA_P2_aldehyde_34
 
@@ -89,3 +92,7 @@ I add plots of each species splitted by file names.
 2015_02_14A_c18_pabVSpabsN2
 
 ![](plot-tech-rep/2015_02_14A_c18_pabVSpabsN2/SA_P2_aldehyde_34.pdf)
+
+2015_08_06B_c18_PTEN_crispr_n1
+
+![](plot-tech-rep/2015_08_06B_c18_PTEN_crispr_n1/SA_P2_aldehyde_34.pdf)

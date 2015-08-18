@@ -41,6 +41,8 @@ Looking at the file bio-reps-summary.pdf I decided to normalize all PIP3 data to
 
 2015_03_06A_c4_pi34p2Trans_n3
 
+2015_08_06A_c4_PTEN_crispr_n1
+
 ```{r}
 rep1 <- get_bio_rep("2014_09_05B_c4_FULLn1", "P3_4")
 rep1$rep <- "2014_09_05B_c4_FULLn1"
@@ -60,6 +62,8 @@ rep8 <- get_bio_rep("2015_02_14B_c4_pten_ab_pab_tcN2_pabVSpabsN2", "P3_4")
 rep8$rep <- "2015_02_14B_c4_pten_ab_pab_tcN2_pabVSpabsN2"
 rep9 <- get_bio_rep("2015_03_06A_c4_pi34p2Trans_n3", "P3_4")
 rep9$rep <- "2015_03_06A_c4_pi34p2Trans_n3"
+rep10 <- get_bio_rep("2015_08_06A_c4_PTEN_crispr_n1", "P3_4")
+rep10$rep <- "2015_08_06A_c4_PTEN_crispr_n1"
 
 d <- rbind(rep1, rep2)
 d <- rbind(d, rep3)
@@ -69,6 +73,7 @@ d <- rbind(d, rep6)
 d <- rbind(d, rep7)
 d <- rbind(d, rep8)
 d <- rbind(d, rep9)
+d <- rbind(d, rep10)
 ```
 
 Then I find a coefficient of normalisation for each replicate (so that it should be always 0.01 in PTEN-sictrl condition)
@@ -162,12 +167,12 @@ Note that there are still two experiments left in which we looked at double sile
 
 ```{r}
 # add last 2 experiments and normalise them by siINPP4(A+B) (there is no sictrl in them)
-rep10 <- get_bio_rep("2014_10_10A_c4_pabVSpabs", "P3_4")
-rep10$rep <- "2014_10_10A_c4_pabVSpabs"
-rep11 <- get_bio_rep("2015_02_14B_c4_pabVSpabsN2", "P3_4")
-rep11$rep <- "2015_02_14B_c4_pabVSpabsN2"
+rep11 <- get_bio_rep("2014_10_10A_c4_pabVSpabs", "P3_4")
+rep11$rep <- "2014_10_10A_c4_pabVSpabs"
+rep12 <- get_bio_rep("2015_02_14B_c4_pabVSpabsN2", "P3_4")
+rep12$rep <- "2015_02_14B_c4_pabVSpabsN2"
 
-t <- rbind(rep10, rep11)
+t <- rbind(rep11, rep12)
 ```
 
 I have not used them in the previous section because they do not have PTEN-sictrl condition and would not be able to normalise them. But now, looking the last figure, I can normalise them by PTEN-siINPP4(A+B) condition (all other bio replicates are quite consistent in this point). The PIP3 concentration at this point should be:
@@ -179,7 +184,7 @@ d1[Genotype == "PTEN" & Condition == "siINPP4(A+B)" & Time == 1, Bio.Mean.GR.nor
 So, first I normalise these two experiments by this time point:
 
 ```{r, results='asis'}
-coef <- t[Time == 1 & Condition == "siINPP4(A+B)" & Genotype == "PTEN", list(norm.coef = 0.00779030920000628/Mean.GR), by = "rep"]
+coef <- t[Time == 1 & Condition == "siINPP4(A+B)" & Genotype == "PTEN", list(norm.coef = 0.00745414134784178/Mean.GR), by = "rep"]
 knitr::kable(coef)
 ```
 
@@ -259,6 +264,8 @@ Looking at the file bio-reps-summary.pdf I decided to normalize all PI(3,4)P2 da
 
 2015_03_06B_c18_pi34p2Trans_n3
 
+2015_08_06B_c18_PTEN_crispr_n1
+
 ```{r}
 rep1 <- get_bio_rep("2014_09_05A_c18_FULLn1", "SA_P2_aldehyde_34")
 rep1$rep <- "2014_09_05A_c18_FULLn1"
@@ -272,12 +279,15 @@ rep5 <- get_bio_rep("2015_02_14A_c18_pten_ab_pab_tcN2_pabVSpabsN2", "SA_P2_aldeh
 rep5$rep <- "2015_02_14A_c18_pten_ab_pab_tcN2_pabVSpabsN2"
 rep6 <- get_bio_rep("2015_03_06B_c18_pi34p2Trans_n3", "SA_P2_aldehyde_34")
 rep6$rep <- "2015_03_06B_c18_pi34p2Trans_n3"
+rep7 <- get_bio_rep("2015_08_06B_c18_PTEN_crispr_n1", "SA_P2_aldehyde_34")
+rep7$rep <- "2015_08_06B_c18_PTEN_crispr_n1"
 
 d <- rbind(rep1, rep2)
 d <- rbind(d, rep3)
 d <- rbind(d, rep4)
 d <- rbind(d, rep5)
 d <- rbind(d, rep6)
+d <- rbind(d, rep7)
 ```
 
 To find the averaged concentration in PTEN-sictrl condition I simply average the data in this point (there are no really bad outliers in PI(3,4)P2 data, so it is possible to do it):
@@ -286,10 +296,10 @@ To find the averaged concentration in PTEN-sictrl condition I simply average the
 d[Time == 1 & Condition == "sictrl" & Genotype == "PTEN", list(mean(Mean.GR))]
 ```
 
-Then I find a coefficient of normalisation for each replicate (so that it should be always 0.078066230364529 in PTEN-sictrl condition)
+Then I find a coefficient of normalisation for each replicate (so that it should be always 0.0765314027687824 in PTEN-sictrl condition)
 
 ```{r, results='asis'}
-coef <- d[Time == 1 & Condition == "sictrl" & Genotype == "PTEN", list(norm.coef = 0.078066230364529/Mean.GR), by = "rep"]
+coef <- d[Time == 1 & Condition == "sictrl" & Genotype == "PTEN", list(norm.coef = 0.0765314027687824/Mean.GR), by = "rep"]
 knitr::kable(coef)
 ```
 
@@ -352,12 +362,12 @@ Note that there are still two experiments left in which we looked at double sile
 
 ```{r}
 # add last 2 experiments and normalise them by siINPP4(A+B) (there is no sictrl in them)
-rep7 <- get_bio_rep("2014_10_10B_c18_pabVSpabs", "SA_P2_aldehyde_34")
-rep7$rep <- "2014_10_10A_c4_pabVSpabs"
-rep8 <- get_bio_rep("2015_02_14A_c18_pabVSpabsN2", "SA_P2_aldehyde_34")
-rep8$rep <- "2015_02_14B_c4_pabVSpabsN2"
+rep8 <- get_bio_rep("2014_10_10B_c18_pabVSpabs", "SA_P2_aldehyde_34")
+rep8$rep <- "2014_10_10A_c4_pabVSpabs"
+rep9 <- get_bio_rep("2015_02_14A_c18_pabVSpabsN2", "SA_P2_aldehyde_34")
+rep9$rep <- "2015_02_14B_c4_pabVSpabsN2"
 
-t <- rbind(rep7, rep8)
+t <- rbind(rep8, rep9)
 ```
 
 I have not used them in the previous section because they do not have PTEN-sictrl condition and would not be able to normalise them. But now, looking the last figure, I can normalise them by PTEN-siINPP4(A+B) condition (all other bio replicates are quite consistent in this point). The PIP3 concentration at this point should be:
@@ -369,7 +379,7 @@ d1[Genotype == "PTEN" & Condition == "siINPP4(A+B)" & Time == 1, Bio.Mean.GR.nor
 So, first I normalise these two experiments by this time point:
 
 ```{r, results='asis'}
-coef <- t[Time == 1 & Condition == "siINPP4(A+B)" & Genotype == "PTEN", list(norm.coef = 0.146013940573659/Mean.GR), by = "rep"]
+coef <- t[Time == 1 & Condition == "siINPP4(A+B)" & Genotype == "PTEN", list(norm.coef = 0.146433426237419/Mean.GR), by = "rep"]
 knitr::kable(coef)
 ```
 
@@ -409,7 +419,7 @@ p <- ggplot(all.rep[Antagonist != "-"], aes(x = Time, y = Mean.GR.norm, color = 
 p
 ```
 
-## Final plot of PIP3 data
+## Final plot of PI(3,4)P2 data
 
 And averaging of all biological replicates provides a final plot containing all PI(3,4)P2 data (I will be working with it in the modeling part):
 
