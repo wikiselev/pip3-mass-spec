@@ -158,11 +158,25 @@ clean_for_copasi <- function() {
     
     setnames(dat, colnames(dat), c("Genotype", "Condition", "Antagonist", "Time", "pi34p2", "pip3"))
     
-    dat[Genotype == "PTEN", `:=`(pten_percentage, 0)]
-    dat[Genotype != "PTEN", `:=`(pten_percentage, 1)]
+#     > unique(dat[,Genotype])
+#     [1] "PTEN"        "PTEN-INPP4B" "PTEN-SHIP2"  "WT"         
+    dat[grepl("PTEN", Genotype), `:=`(pten_percentage, 0)]
+    dat[!grepl("PTEN", Genotype), `:=`(pten_percentage, 1)]
     
+    dat[grepl("INPP4B", Genotype), `:=`(inpp4b_percentage_crisp, 0)]
+    dat[!grepl("INPP4B", Genotype), `:=`(inpp4b_percentage_crisp, 1)]
+    
+    dat[grepl("SHIP2", Genotype), `:=`(ship2_percentage_crisp, 0)]
+    dat[!grepl("SHIP2", Genotype), `:=`(ship2_percentage_crisp, 1)]
+    
+#     > unique(dat[,Condition])
+#     [1] "siINPP4(A+B)"         "siINPP4(A+B)&siSHIP2" "siSHIP2"             
+#     [4] "sictrl"               "siINPP4A"            
     dat[Condition == "siSHIP2", `:=`(ship2_percentage, 0)]
     dat[Condition != "siSHIP2", `:=`(ship2_percentage, 1)]
+    
+    dat[Condition == "siINPP4A", `:=`(inpp4a_percentage, 0)]
+    dat[Condition != "siINPP4A", `:=`(inpp4a_percentage, 1)]
     
     dat[Condition == "siINPP4(A+B)", `:=`(pi34p2_degradation_via_inpp4ab, 0)]
     dat[Condition != "siINPP4(A+B)", `:=`(pi34p2_degradation_via_inpp4ab, 1)]
@@ -173,7 +187,7 @@ clean_for_copasi <- function() {
     dat[Antagonist == "1uMPI-103", `:=`(pi3k_act, 0)]
     dat[Antagonist != "1uMPI-103", `:=`(pi3k_act, 1)]
     
-    write.csv(dat[, list(Time, pi34p2, pip3, pten_percentage, ship2_percentage, pi34p2_degradation_via_inpp4ab, 
+    write.csv(dat[, list(Time, pi34p2, pip3, pten_percentage, inpp4b_percentage_crisp, ship2_percentage_crisp, ship2_percentage, inpp4a_percentage, pi34p2_degradation_via_inpp4ab, 
         pi3k_act)], file = "copasi/experiment.csv", row.names = F, quote = F)
 }
 
