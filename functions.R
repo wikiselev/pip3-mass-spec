@@ -201,7 +201,8 @@ regr <- function(d, point.num, cond) {
   model = lm(log(d$pip3[1:point.num]) ~ d$Time[1:point.num])
   cat(paste0("Condition: ", cond))
   cat("\n")
-  cat(capture.output(summary(model)))
+  out <- capture.output(summary(model))
+  cat(grep("Time", out, value = TRUE)[2])
   cat("\n\n")
   return(data.table(Time = d$Time[1:point.num], pip3 = exp(predict(model, list(Time = d$Time[1:point.num]))), 
                     Condition = cond))
