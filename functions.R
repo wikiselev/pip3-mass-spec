@@ -197,3 +197,43 @@ clean_for_copasi <- function() {
                        pi3k_act)], file = "experiment.csv", row.names = F, quote = F)
 }
 
+regr <- function(d, point.num, cond) {
+  model = lm(log(d$pip3[1:point.num]) ~ d$Time[1:point.num])
+  cat(paste0("Condition: ", cond))
+  cat("\n")
+  cat(capture.output(summary(model)))
+  cat("\n\n")
+  return(data.table(Time = d$Time[1:point.num], pip3 = exp(predict(model, list(Time = d$Time[1:point.num]))), 
+                    Condition = cond))
+}
+
+inhibitor_regressions <- function() {
+  d <- as.data.table(read.csv("experiment.csv"))
+  
+  sink("inhibitor-regressions.txt")
+  
+  d1 <- d[Genotype == "PTEN" & Condition == "sictrl" & Antagonist == "1uMPI-103"]
+  d1$Condition <- "PTEN"
+  t1 <- regr(d1, 4, "PTEN")
+  d2 <- d[Genotype == "WT" & Condition == "siSHIP2" & Antagonist == "1uMPI-103"]
+  d2$Condition <- "SHIP2"
+  t2 <- regr(d2, 3, "SHIP2")
+  d3 <- d[Genotype == "PTEN" & Condition == "siSHIP2" & Antagonist == "1uMPI-103"]
+  d3$Condition <- "PTEN&SHIP2"
+  t3 <- regr(d3, 7, "PTEN&SHIP2")
+  
+  sink()
+  
+  d.tot <- rbind(d1, d2)
+  d.tot <- rbind(d.tot, d3)
+  d.tot <- d.tot[, list(Time, pip3, Condition)]
+  t.tot <- rbind(t1, t2)
+  t.tot <- rbind(t.tot, t3)
+  
+  p <- ggplot(d.tot, aes(x = Time, y = pip3)) +
+    geom_point(aes(color = Condition)) +
+    geom_line(data = t.tot, aes(group = Condition)) + 
+    theme_bw() +
+    labs(x = "Time, s", y = "PIP3, uM")
+  ggsave(p, file = "inhibitor-regressions.pdf", w = 6, h = 4) 
+}

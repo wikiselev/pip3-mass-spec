@@ -13,3 +13,6 @@ tech_reps()
 
 # make a copasi experiment file
 clean_for_copasi()
+
+# calculate activities of PTEN and SHIP2 based on inhibitor data
+inhibitor_regressions()
