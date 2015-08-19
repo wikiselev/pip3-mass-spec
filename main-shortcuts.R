@@ -187,7 +187,7 @@ clean_for_copasi <- function() {
     dat[Antagonist == "1uMPI-103", `:=`(pi3k_act, 0)]
     dat[Antagonist != "1uMPI-103", `:=`(pi3k_act, 1)]
     
-    write.csv(dat[, list(Time, pi34p2, pip3, pten_percentage, inpp4b_percentage_crisp, ship2_percentage_crisp, ship2_percentage, inpp4a_percentage, pi34p2_degradation_via_inpp4ab, 
+    write.csv(dat[, list(Genotype, Condition, Antagonist, Time, pi34p2, pip3, pten_percentage, inpp4b_percentage_crisp, ship2_percentage_crisp, ship2_percentage, inpp4a_percentage, pi34p2_degradation_via_inpp4ab, 
         pi3k_act)], file = "copasi/experiment.csv", row.names = F, quote = F)
 }
 

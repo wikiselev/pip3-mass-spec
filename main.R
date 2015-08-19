@@ -12,10 +12,6 @@ clean_for_copasi()
 
 
 
-
-
-
-
 plot_gold_ratios("pip2")
 plot_gold_ratios("pip3")
 average_tech_reps("pip2")
