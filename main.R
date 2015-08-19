@@ -7,9 +7,9 @@ process_data()
 tech_reps()
 
 # Now one needs to complile (knit) the following reports:
-# 1. bio-reps-summary.Rmd
-# 2. bio-reps-averaging.Rmd
-# 3. preparation-for-modeling.Rmd
+# 1-bio-reps-summary.Rmd
+# 2-bio-reps-averaging.Rmd
+# 3-preparation-for-modeling.Rmd
 
 # make a copasi experiment file
 clean_for_copasi()
