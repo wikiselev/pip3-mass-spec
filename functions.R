@@ -194,7 +194,7 @@ clean_for_copasi <- function() {
   dat[Antagonist != "1uMPI-103", `:=`(pi3k_act, 1)]
   
   write.csv(dat[, list(Genotype, Condition, Antagonist, Time, pi34p2, pip3, pten_percentage, inpp4b_percentage_crisp, ship2_percentage_crisp, ship2_percentage, inpp4a_percentage, pi34p2_degradation_via_inpp4ab, 
-                       pi3k_act)], file = "experiment.csv", row.names = F, quote = F)
+                       pi3k_act)], file = "output/experiment.csv", row.names = F, quote = F)
 }
 
 regr <- function(d, point.num, cond) {
@@ -209,9 +209,9 @@ regr <- function(d, point.num, cond) {
 }
 
 inhibitor_regressions <- function() {
-  d <- as.data.table(read.csv("experiment.csv"))
+  d <- as.data.table(read.csv("output/experiment.csv"))
   
-  sink("inhibitor-regressions.txt")
+  sink("output/inhibitor-regressions.txt")
   
   d1 <- d[Genotype == "PTEN" & Condition == "sictrl" & Antagonist == "1uMPI-103"]
   d1$Condition <- "PTEN"
@@ -236,5 +236,5 @@ inhibitor_regressions <- function() {
     geom_line(data = t.tot, aes(group = Condition)) + 
     theme_bw() +
     labs(x = "Time, s", y = "PIP3, uM")
-  ggsave(p, file = "inhibitor-regressions.pdf", w = 6, h = 4) 
+  ggsave(p, file = "output/inhibitor-regressions.pdf", w = 6, h = 4) 
 }
