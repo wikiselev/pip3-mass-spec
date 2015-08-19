@@ -4,3 +4,6 @@
 1-first-analysis
 2-second-analysis
 smoldyn
+.DS_Store
+*/.DS_Store
+pip3-mass-spec.Rproj
