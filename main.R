@@ -1,30 +1,15 @@
 source("functions.R")
 
+# process raw data
 process_data()
+
+# average technical replicates
 tech_reps()
 
-# add comments about different reports
+# Now one needs to complile (knit) the following reports:
+# 1. bio-reps-summary.Rmd
+# 2. bio-reps-averaging.Rmd
+# 3. preparation-for-modeling.Rmd
 
+# make a copasi experiment file
 clean_for_copasi()
-
-
-
-
-
-
-plot_gold_ratios("pip2")
-plot_gold_ratios("pip3")
-average_tech_reps("pip2")
-average_tech_reps("pip3")
-plot_species()
-
-plot_species1("pip2")
-plot_species1("pip3")
-
-# data with inhibitors
-process_data_inhibitors()
-plot_gold_ratios("inhibitors")
-average_tech_reps("inhibitors")
-plot_species_inhibitors()
-
-# test 
